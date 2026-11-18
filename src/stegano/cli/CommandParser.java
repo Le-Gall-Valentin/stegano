@@ -40,6 +40,10 @@ public final class CommandParser {
         return switch (args[0]) {
             case "hide" -> parseHide(rest);
             case "reveal" -> parseReveal(rest);
+            case "capacity" -> {
+                Arguments arguments = Arguments.scan(rest, Set.of());
+                yield new Command.Capacity(toPath(arguments.requirePositionals(1).getFirst()));
+            }
             case "help", "-h", "--help" -> {
                 Arguments.scan(rest, Set.of()).requirePositionals(0);
                 yield new Command.Help();

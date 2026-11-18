@@ -29,6 +29,14 @@ public sealed interface Command {
     }
 
     /**
+     * Shows the maximum secret size an image can hold, with and without password.
+     *
+     * @param image the PNG image to measure
+     */
+    record Capacity(Path image) implements Command {
+    }
+
+    /**
      * Shows the usage.
      */
     record Help() implements Command {

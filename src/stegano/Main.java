@@ -32,6 +32,7 @@ public final class Main {
             Usage:
               java -jar stegano.jar hide -i <input.png> -o <output.png> -s "secret" [-p <password>]
               java -jar stegano.jar reveal <image.png> [-p <password>]
+              java -jar stegano.jar capacity <image.png>
               java -jar stegano.jar help""";
 
     private final PrintStream out;
@@ -97,6 +98,13 @@ public final class Main {
                     error("Warning: this secret is not encrypted, the password was ignored.");
                 }
                 out.println(PREFIX + "secret message is: \"" + escapeControls(revealed.secret()) + "\"");
+            }
+            case Command.Capacity(Path image) -> {
+                Steganographer.Capacity capacity = Steganographer.capacity(LsbCarrier.copyOf(PngFiles.read(image)));
+                out.println(PREFIX + "maximum secret length without password: "
+                        + capacity.withoutPassword() + " bytes (UTF-8)");
+                out.println(PREFIX + "maximum secret length with password: "
+                        + capacity.withPassword() + " bytes (UTF-8)");
             }
             case Command.Help() -> out.println(USAGE);
         }
