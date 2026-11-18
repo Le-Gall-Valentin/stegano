@@ -91,7 +91,7 @@ public final class Main {
             }
             case Command.Reveal(Path image) -> {
                 String secret = Steganographer.reveal(LsbCarrier.copyOf(PngFiles.read(image)));
-                out.println(PREFIX + "secret message is: \"" + secret + "\"");
+                out.println(PREFIX + "secret message is: \"" + escapeControls(secret) + "\"");
             }
             case Command.Help() -> out.println(USAGE);
         }
@@ -99,5 +99,21 @@ public final class Main {
 
     private void error(String message) {
         err.println(PREFIX + "/!\\ " + message);
+    }
+
+    /**
+     * Escapes control characters other than line feed and tab as {@code \}{@code uXXXX}, so that
+     * a secret read from an untrusted image cannot inject terminal escape sequences.
+     */
+    private static String escapeControls(String text) {
+        StringBuilder escaped = new StringBuilder(text.length());
+        text.chars().forEach(c -> {
+            if (Character.isISOControl(c) && c != '\n' && c != '\t') {
+                escaped.append(String.format("\\u%04X", c));
+            } else {
+                escaped.append((char) c);
+            }
+        });
+        return escaped.toString();
     }
 }
