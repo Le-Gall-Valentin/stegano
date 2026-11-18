@@ -8,7 +8,7 @@ package stegano.layout;
  * being numbered row by row from the top-left corner. An order is stateful: each call
  * to {@link #next()} yields a new slot, never the same one twice.
  */
-public sealed interface SlotOrder permits SequentialOrder {
+public sealed interface SlotOrder permits SequentialOrder, ScatteredOrder {
 
     /**
      * Returns the next slot to read or write.
