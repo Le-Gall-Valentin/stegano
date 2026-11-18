@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -19,6 +20,7 @@ public final class CommandParser {
     private static final String INPUT = "-i";
     private static final String OUTPUT = "-o";
     private static final String SECRET = "-s";
+    private static final String PASSWORD = "-p";
 
     private CommandParser() {
     }
@@ -47,7 +49,7 @@ public final class CommandParser {
     }
 
     private static Command parseHide(String[] args) throws UsageException {
-        Arguments arguments = Arguments.scan(args, Set.of(INPUT, OUTPUT, SECRET));
+        Arguments arguments = Arguments.scan(args, Set.of(INPUT, OUTPUT, SECRET, PASSWORD));
         arguments.requirePositionals(0);
         Path input = toPath(arguments.required(INPUT));
         Path output = toPath(arguments.required(OUTPUT));
@@ -60,12 +62,21 @@ public final class CommandParser {
         if (secret.isEmpty()) {
             throw new UsageException("The secret string must not be empty.");
         }
-        return new Command.Hide(input, output, secret);
+        return new Command.Hide(input, output, secret, password(arguments));
     }
 
     private static Command parseReveal(String[] args) throws UsageException {
-        Arguments arguments = Arguments.scan(args, Set.of());
-        return new Command.Reveal(toPath(arguments.requirePositionals(1).getFirst()));
+        Arguments arguments = Arguments.scan(args, Set.of(PASSWORD));
+        Path image = toPath(arguments.requirePositionals(1).getFirst());
+        return new Command.Reveal(image, password(arguments));
+    }
+
+    private static Optional<String> password(Arguments arguments) throws UsageException {
+        Optional<String> password = arguments.optional(PASSWORD);
+        if (password.isPresent() && password.get().isEmpty()) {
+            throw new UsageException("The password must not be empty.");
+        }
+        return password;
     }
 
     private static Path toPath(String value) throws UsageException {
@@ -103,6 +114,10 @@ public final class CommandParser {
                 }
             }
             return new Arguments(options, positionals);
+        }
+
+        Optional<String> optional(String option) {
+            return Optional.ofNullable(options.get(option));
         }
 
         String required(String option) throws UsageException {

@@ -2,11 +2,13 @@ package stegano;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import stegano.cli.Command;
 import stegano.cli.CommandParser;
 import stegano.cli.UsageException;
 import stegano.core.Steganographer;
+import stegano.core.Steganographer.Revealed;
 import stegano.image.LsbCarrier;
 import stegano.image.PngFiles;
 
@@ -28,8 +30,8 @@ public final class Main {
     private static final String PREFIX = "--> ";
     private static final String USAGE = """
             Usage:
-              java -jar stegano.jar hide -i <input.png> -o <output.png> -s "secret"
-              java -jar stegano.jar reveal <image.png>
+              java -jar stegano.jar hide -i <input.png> -o <output.png> -s "secret" [-p <password>]
+              java -jar stegano.jar reveal <image.png> [-p <password>]
               java -jar stegano.jar help""";
 
     private final PrintStream out;
@@ -83,15 +85,18 @@ public final class Main {
 
     private void execute(Command command) throws StegoException {
         switch (command) {
-            case Command.Hide(Path input, Path output, String secret) -> {
+            case Command.Hide(Path input, Path output, String secret, Optional<String> password) -> {
                 LsbCarrier carrier = LsbCarrier.copyOf(PngFiles.read(input));
-                Steganographer.hide(carrier, secret);
+                Steganographer.hide(carrier, secret, password);
                 PngFiles.write(carrier.image(), output);
                 out.println(PREFIX + "secret successfully hidden in \"" + output + "\"");
             }
-            case Command.Reveal(Path image) -> {
-                String secret = Steganographer.reveal(LsbCarrier.copyOf(PngFiles.read(image)));
-                out.println(PREFIX + "secret message is: \"" + escapeControls(secret) + "\"");
+            case Command.Reveal(Path image, Optional<String> password) -> {
+                Revealed revealed = Steganographer.reveal(LsbCarrier.copyOf(PngFiles.read(image)), password);
+                if (password.isPresent() && !revealed.encrypted()) {
+                    error("Warning: this secret is not encrypted, the password was ignored.");
+                }
+                out.println(PREFIX + "secret message is: \"" + escapeControls(revealed.secret()) + "\"");
             }
             case Command.Help() -> out.println(USAGE);
         }

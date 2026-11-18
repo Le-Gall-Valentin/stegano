@@ -86,10 +86,22 @@ public record Header(boolean encrypted, boolean scattered, long payloadLength, i
      * @return the first 5 bytes of the encoded header
      */
     public byte[] associatedData() {
+        return associatedData(encrypted, scattered);
+    }
+
+    /**
+     * Returns the signature, version and flags of a header with the given flags. Unlike
+     * {@link #associatedData()}, it is available before the payload, hence the header, exists.
+     *
+     * @param encrypted whether the payload is encrypted
+     * @param scattered whether the payload is scattered
+     * @return the first 5 bytes of the encoded header
+     */
+    public static byte[] associatedData(boolean encrypted, boolean scattered) {
         return ByteBuffer.allocate(SIGNATURE.length + 2)
                 .put(SIGNATURE)
                 .put((byte) VERSION)
-                .put((byte) flags())
+                .put((byte) flags(encrypted, scattered))
                 .array();
     }
 
@@ -138,7 +150,7 @@ public record Header(boolean encrypted, boolean scattered, long payloadLength, i
         return new Header(encrypted, scattered, payloadLength, crc);
     }
 
-    private int flags() {
+    private static int flags(boolean encrypted, boolean scattered) {
         return (encrypted ? FLAG_ENCRYPTED : 0) | (scattered ? FLAG_SCATTERED : 0);
     }
 
