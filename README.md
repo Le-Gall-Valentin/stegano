@@ -1,7 +1,8 @@
 # Travail Pratique #3: Stéganographie
 
 ## Auteurs
-- Code permanent, nom, prénom
+ - LEGV17030400, Le Gall, Valentin
+ - GIRB04080500, Girard, Benoit
 
 ## Compatibilité
 
